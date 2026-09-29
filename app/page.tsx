@@ -1,9 +1,9 @@
-const siteName : string = "SalahTime";
+import Header from "@/components/Header";
 
 export default function Home() {
   return (
     <main>
-      <h1>{siteName}</h1>
+      <Header />
       <p>Prayer times, simply.</p>
     </main>
   );
