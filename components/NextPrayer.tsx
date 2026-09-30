@@ -1,22 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import type { Prayer } from "@/data/prayers";
 
-const prayerTime = "19:21";
-
-const getTimeRemaining = () => {
-  const now = new Date();
-
-  const [hours, minutes] = prayerTime.split(":").map(Number);
-
-  const prayerDate = new Date();
-
-  prayerDate.setHours(hours);
-  prayerDate.setMinutes(minutes);
-  prayerDate.setSeconds(0);
-  prayerDate.setMilliseconds(0);
-
-  return prayerDate.getTime() - now.getTime();
+type NextPrayerProps = {
+  prayers: Prayer[];
 };
 
 const formatCountdown = (milliseconds: number) => {
@@ -38,13 +26,74 @@ const formatCountdown = (milliseconds: number) => {
   ).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
 };
 
-export default function NextPrayer() {
+export default function NextPrayer({
+  prayers,
+}: NextPrayerProps) {
+  const [nextPrayer, setNextPrayer] =
+    useState<Prayer | null>(null);
+
   const [countdown, setCountdown] =
     useState("00:00:00");
 
   useEffect(() => {
     const updateCountdown = () => {
-      const remaining = getTimeRemaining();
+      const now = new Date();
+
+      let nextPrayerData:
+        | {
+            prayer: Prayer;
+            prayerDate: Date;
+          }
+        | undefined;
+
+      for (const prayer of prayers) {
+        const [hours, minutes] = prayer.time
+          .split(":")
+          .map(Number);
+
+        const prayerDate = new Date();
+
+        prayerDate.setHours(hours);
+        prayerDate.setMinutes(minutes);
+        prayerDate.setSeconds(0);
+        prayerDate.setMilliseconds(0);
+
+        if (prayerDate > now) {
+          nextPrayerData = {
+            prayer,
+            prayerDate,
+          };
+
+          break;
+        }
+      }
+
+      if (!nextPrayerData) {
+        const firstPrayer = prayers[0];
+
+        const [hours, minutes] = firstPrayer.time
+          .split(":")
+          .map(Number);
+
+        const tomorrow = new Date();
+
+        tomorrow.setDate(tomorrow.getDate() + 1);
+        tomorrow.setHours(hours);
+        tomorrow.setMinutes(minutes);
+        tomorrow.setSeconds(0);
+        tomorrow.setMilliseconds(0);
+
+        nextPrayerData = {
+          prayer: firstPrayer,
+          prayerDate: tomorrow,
+        };
+      }
+
+      setNextPrayer(nextPrayerData.prayer);
+
+      const remaining =
+        nextPrayerData.prayerDate.getTime() -
+        now.getTime();
 
       setCountdown(formatCountdown(remaining));
     };
@@ -59,7 +108,7 @@ export default function NextPrayer() {
     return () => {
       clearInterval(interval);
     };
-  }, []);
+  }, [prayers]);
 
   return (
     <section className="px-6 py-12">
@@ -70,7 +119,7 @@ export default function NextPrayer() {
           </p>
 
           <h1 className="mt-2 text-2xl font-semibold">
-            Monday, September 29, 2026
+            Monday, September 30, 2026
           </h1>
         </div>
 
@@ -80,11 +129,11 @@ export default function NextPrayer() {
           </p>
 
           <h2 className="mt-4 text-4xl font-semibold">
-            Maghrib
+            {nextPrayer?.name}
           </h2>
 
           <p className="mt-2 text-3xl">
-            {prayerTime}
+            {nextPrayer?.time}
           </p>
 
           <p className="mt-6 text-sm text-gray-500">
