@@ -1,4 +1,66 @@
+"use client";
+
+import { useEffect, useState } from "react";
+
+const prayerTime = "19:21";
+
+const getTimeRemaining = () => {
+  const now = new Date();
+
+  const [hours, minutes] = prayerTime.split(":").map(Number);
+
+  const prayerDate = new Date();
+
+  prayerDate.setHours(hours);
+  prayerDate.setMinutes(minutes);
+  prayerDate.setSeconds(0);
+  prayerDate.setMilliseconds(0);
+
+  return prayerDate.getTime() - now.getTime();
+};
+
+const formatCountdown = (milliseconds: number) => {
+  const totalSeconds = Math.max(
+    0,
+    Math.floor(milliseconds / 1000)
+  );
+
+  const hours = Math.floor(totalSeconds / 3600);
+
+  const minutes = Math.floor(
+    (totalSeconds % 3600) / 60
+  );
+
+  const seconds = totalSeconds % 60;
+
+  return `${String(hours).padStart(2, "0")}:${String(
+    minutes
+  ).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+};
+
 export default function NextPrayer() {
+  const [countdown, setCountdown] =
+    useState("00:00:00");
+
+  useEffect(() => {
+    const updateCountdown = () => {
+      const remaining = getTimeRemaining();
+
+      setCountdown(formatCountdown(remaining));
+    };
+
+    updateCountdown();
+
+    const interval = setInterval(
+      updateCountdown,
+      1000
+    );
+
+    return () => {
+      clearInterval(interval);
+    };
+  }, []);
+
   return (
     <section className="px-6 py-12">
       <div className="mx-auto max-w-6xl">
@@ -22,11 +84,11 @@ export default function NextPrayer() {
           </h2>
 
           <p className="mt-2 text-3xl">
-            19:21
+            {prayerTime}
           </p>
 
           <p className="mt-6 text-sm text-gray-500">
-            01:42:18 remaining
+            {countdown} remaining
           </p>
         </div>
       </div>
