@@ -9,42 +9,25 @@ type NextPrayerProps = {
   date: string;
 };
 
-const formatCountdown = (
-  milliseconds: number
-) => {
-  const totalSeconds = Math.max(
-    0,
-    Math.floor(milliseconds / 1000)
-  );
+const formatCountdown = (milliseconds: number) => {
+  const totalSeconds = Math.max(0, Math.floor(milliseconds / 1000));
 
-  const hours = Math.floor(
-    totalSeconds / 3600
-  );
+  const hours = Math.floor(totalSeconds / 3600);
 
-  const minutes = Math.floor(
-    (totalSeconds % 3600) / 60
-  );
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
 
   const seconds = totalSeconds % 60;
 
-  return `${String(hours).padStart(2, "0")}:${String(
-    minutes
-  ).padStart(2, "0")}:${String(seconds).padStart(
+  return `${String(hours).padStart(2, "0")}:${String(minutes).padStart(
     2,
-    "0"
-  )}`;
+    "0",
+  )}:${String(seconds).padStart(2, "0")}`;
 };
 
-export default function NextPrayer({
-  prayers,
-  city,
-  date,
-}: NextPrayerProps) {
-  const [nextPrayer, setNextPrayer] =
-    useState<Prayer | null>(null);
+export default function NextPrayer({ prayers, city, date }: NextPrayerProps) {
+  const [nextPrayer, setNextPrayer] = useState<Prayer | null>(null);
 
-  const [countdown, setCountdown] =
-    useState("00:00:00");
+  const [countdown, setCountdown] = useState("00:00:00");
 
   useEffect(() => {
     const updateCountdown = () => {
@@ -54,16 +37,12 @@ export default function NextPrayer({
         .filter((prayer) => prayer.isPrayer)
         .map((prayer) => ({
           prayer,
-          timestamp: new Date(
-            prayer.datetime
-          ).getTime(),
+          timestamp: new Date(prayer.datetime).getTime(),
         }))
-        .filter(
-          (item) => item.timestamp > now
-        );
+        .filter((item) => item.timestamp > now)
+        .sort((a, b) => a.timestamp - b.timestamp);
 
-      const nextPrayerData =
-        upcomingPrayers[0];
+      const nextPrayerData = upcomingPrayers[0];
 
       if (!nextPrayerData) {
         setNextPrayer(null);
@@ -73,20 +52,12 @@ export default function NextPrayer({
 
       setNextPrayer(nextPrayerData.prayer);
 
-      const remaining =
-        nextPrayerData.timestamp - now;
-
-      setCountdown(
-        formatCountdown(remaining)
-      );
+      setCountdown(formatCountdown(nextPrayerData.timestamp - now));
     };
 
     updateCountdown();
 
-    const interval = setInterval(
-      updateCountdown,
-      1000
-    );
+    const interval = setInterval(updateCountdown, 1000);
 
     return () => {
       clearInterval(interval);
@@ -97,13 +68,9 @@ export default function NextPrayer({
     <section className="px-6 py-12">
       <div className="mx-auto max-w-6xl">
         <div className="mb-8">
-          <p className="text-sm text-gray-500">
-            {city}, Morocco
-          </p>
+          <p className="text-sm text-gray-500">{city}, Morocco</p>
 
-          <h1 className="mt-2 text-2xl font-semibold">
-            {date}
-          </h1>
+          <h1 className="mt-2 text-2xl font-semibold">{date}</h1>
         </div>
 
         <div className="rounded-2xl border p-8 text-center">
@@ -115,13 +82,9 @@ export default function NextPrayer({
             {nextPrayer?.name ?? "No more prayers today"}
           </h2>
 
-          <p className="mt-2 text-3xl">
-            {nextPrayer?.time ?? "--:--"}
-          </p>
+          <p className="mt-2 text-3xl">{nextPrayer?.time ?? "--:--"}</p>
 
-          <p className="mt-6 text-sm text-gray-500">
-            {countdown} remaining
-          </p>
+          <p className="mt-6 text-sm text-gray-500">{countdown} remaining</p>
         </div>
       </div>
     </section>

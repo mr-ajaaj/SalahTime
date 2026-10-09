@@ -3,32 +3,38 @@ import NextPrayer from "@/components/NextPrayer";
 import PrayerTimes from "@/components/PrayerTimes";
 import {
   getPrayerTimes,
-  getTodayDate,
+  getDateByOffset,
 } from "@/lib/aladhan";
 
 export default async function Home() {
   const city = "Tangier";
   const country = "Morocco";
 
-  const date = getTodayDate();
+  const today = getDateByOffset(0);
+  const tomorrow = getDateByOffset(1);
 
-  const prayers = await getPrayerTimes(
-    city,
-    country,
-    date
-  );
+  const [todayPrayers, tomorrowPrayers] =
+    await Promise.all([
+      getPrayerTimes(city, country, today),
+      getPrayerTimes(city, country, tomorrow),
+    ]);
+
+  const allPrayers = [
+    ...todayPrayers,
+    ...tomorrowPrayers,
+  ];
 
   return (
     <main>
       <Header />
 
       <NextPrayer
-        prayers={prayers}
+        prayers={allPrayers}
         city={city}
-        date={date}
+        date={today}
       />
 
-      <PrayerTimes prayers={prayers} />
+      <PrayerTimes prayers={todayPrayers} />
     </main>
   );
 }

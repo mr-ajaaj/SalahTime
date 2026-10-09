@@ -19,9 +19,12 @@ type AlAdhanResponse = {
   };
 };
 
+
 const TIME_ZONE = "Africa/Casablanca";
 
-export function getTodayDate(): string {
+export function getDateByOffset(
+  offsetDays: number
+): string {
   const parts = new Intl.DateTimeFormat("en-GB", {
     timeZone: TIME_ZONE,
     day: "2-digit",
@@ -29,19 +32,46 @@ export function getTodayDate(): string {
     year: "numeric",
   }).formatToParts(new Date());
 
-  const day = parts.find(
+  const day = Number(
+    parts.find((part) => part.type === "day")?.value
+  );
+
+  const month = Number(
+    parts.find((part) => part.type === "month")?.value
+  );
+
+  const year = Number(
+    parts.find((part) => part.type === "year")?.value
+  );
+
+  const date = new Date(
+    Date.UTC(year, month - 1, day + offsetDays)
+  );
+
+  const formattedParts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: "UTC",
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).formatToParts(date);
+
+  const nextDay = formattedParts.find(
     (part) => part.type === "day"
   )?.value;
 
-  const month = parts.find(
+  const nextMonth = formattedParts.find(
     (part) => part.type === "month"
   )?.value;
 
-  const year = parts.find(
+  const nextYear = formattedParts.find(
     (part) => part.type === "year"
   )?.value;
 
-  return `${day}-${month}-${year}`;
+  return `${nextDay}-${nextMonth}-${nextYear}`;
+}
+
+export function getTodayDate(): string {
+  return getDateByOffset(0);
 }
 
 export async function getPrayerTimes(
