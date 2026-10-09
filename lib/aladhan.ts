@@ -1,6 +1,8 @@
 export type Prayer = {
   name: string;
   time: string;
+  datetime: string;
+  isPrayer: boolean;
 };
 
 type AlAdhanResponse = {
@@ -17,6 +19,31 @@ type AlAdhanResponse = {
   };
 };
 
+const TIME_ZONE = "Africa/Casablanca";
+
+export function getTodayDate(): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone: TIME_ZONE,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).formatToParts(new Date());
+
+  const day = parts.find(
+    (part) => part.type === "day"
+  )?.value;
+
+  const month = parts.find(
+    (part) => part.type === "month"
+  )?.value;
+
+  const year = parts.find(
+    (part) => part.type === "year"
+  )?.value;
+
+  return `${day}-${month}-${year}`;
+}
+
 export async function getPrayerTimes(
   city: string,
   country: string,
@@ -29,6 +56,8 @@ export async function getPrayerTimes(
   url.searchParams.set("city", city);
   url.searchParams.set("country", country);
   url.searchParams.set("method", "21");
+  url.searchParams.set("timezonestring", "Africa/Casablanca");
+  url.searchParams.set("iso8601", "true");
 
   const response = await fetch(url);
 
@@ -40,12 +69,29 @@ export async function getPrayerTimes(
 
   const { timings } = result.data;
 
+  const createPrayer = (
+    name: string,
+    datetime: string,
+    isPrayer: boolean
+  ): Prayer => {
+    const time = datetime
+      .split("T")[1]
+      .slice(0, 5);
+
+    return {
+      name,
+      time,
+      datetime,
+      isPrayer,
+    };
+  };
+
   return [
-    { name: "Fajr", time: timings.Fajr },
-    { name: "Sunrise", time: timings.Sunrise },
-    { name: "Dhuhr", time: timings.Dhuhr },
-    { name: "Asr", time: timings.Asr },
-    { name: "Maghrib", time: timings.Maghrib },
-    { name: "Isha", time: timings.Isha },
+    createPrayer("Fajr", timings.Fajr, true),
+    createPrayer("Sunrise", timings.Sunrise, false),
+    createPrayer("Dhuhr", timings.Dhuhr, true),
+    createPrayer("Asr", timings.Asr, true),
+    createPrayer("Maghrib", timings.Maghrib, true),
+    createPrayer("Isha", timings.Isha, true),
   ];
 }
